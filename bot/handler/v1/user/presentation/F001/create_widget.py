@@ -122,14 +122,15 @@ async def on_structure(
     """Trigger AI structuring and show the first slide."""
     presentation_id = callback_data.presentation_id
 
-    await callback.message.edit_text(vocab.STRUCTURING)
+    # Answer callback immediately to avoid Telegram timeout
+    await callback.answer()
+    msg = await callback.message.edit_text(vocab.STRUCTURING)
 
     try:
         slides = await api.structure_presentation(presentation_id)
 
         if not slides:
             await callback.message.edit_text(vocab.NO_SLIDES)
-            await callback.answer()
             return
 
         await state.set_state(PresentationState.viewing_slides)
@@ -151,5 +152,3 @@ async def on_structure(
     except Exception as exc:
         logger.exception("Structure failed")
         await ErrorAnswer.run(callback, {"error": str(exc)})
-
-    await callback.answer()

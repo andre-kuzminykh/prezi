@@ -54,6 +54,8 @@ async def test_confirm_widget_calls_export_pdf():
 
         await on_done(cb, cb_data, state)
 
+    # callback.answer() is called first (immediately), then edit_text
+    cb.answer.assert_awaited_once()
     cb.message.edit_text.assert_awaited_once()
     mock_api.export_pdf.assert_awaited_once_with(42)
     cb.message.answer_document.assert_awaited_once()
@@ -82,7 +84,8 @@ async def test_confirm_widget_handles_export_error():
 
         await on_done(cb, cb_data, state)
 
-    # Should have been called twice: first "Generating PDF", then error message
+    # callback.answer() first, then edit_text twice (generating + error)
+    cb.answer.assert_awaited_once()
     assert cb.message.edit_text.await_count == 2
     error_text = cb.message.edit_text.call_args_list[1][0][0]
     assert "PDF generation failed" in error_text

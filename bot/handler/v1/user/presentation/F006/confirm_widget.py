@@ -33,6 +33,8 @@ async def on_done(
     """Generate HTML + PDF and send PDF to user."""
     presentation_id = callback_data.presentation_id
 
+    # Answer callback immediately to avoid Telegram timeout
+    await callback.answer()
     await callback.message.edit_text(vocab.GENERATING_PDF)
 
     try:
@@ -60,5 +62,3 @@ async def on_done(
         await callback.message.edit_text(
             vocab.ERROR.format(error=str(exc))
         )
-
-    await callback.answer()
