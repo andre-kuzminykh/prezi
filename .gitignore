@@ -48,5 +48,6 @@ docker-compose.override.yml
 .ipynb_checkpoints/
 
 # Generated files
-*.html
 *.pdf
+# Keep Jinja2 templates
+!service/templates/*.html
