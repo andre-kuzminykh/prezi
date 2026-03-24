@@ -9,10 +9,13 @@ LLM service for AI-powered text structuring and slide editing.
 
 import io
 import json
+from pathlib import Path
 
 from openai import AsyncOpenAI
 
 from core.config import config
+
+DESIGN_KIT_PATH = Path(__file__).resolve().parent.parent.parent / "templates" / "design_kit.html"
 
 STRUCTURE_SYSTEM_PROMPT = """You are a presentation structuring assistant.
 Analyze the provided text and break it into logical presentation slides.
@@ -41,6 +44,27 @@ Each object must have:
 - "visual_description": the visual description
 
 Return ONLY the JSON array, no other text."""
+
+GENERATE_HTML_SYSTEM_PROMPT = """You are an expert HTML presentation designer.
+You will receive:
+1. A design-kit reference (CSS styles and layout patterns) to follow
+2. Slide content (title, text, visual_description for each slide)
+
+Your job: produce a single, self-contained HTML document — a **horizontal
+full-screen presentation** (each slide = 100vw × 100vh, scrolling horizontally
+with CSS `scroll-snap`).
+
+Rules:
+- Use ONLY the design-kit styles provided. Do not invent new colours or fonts.
+- The first slide is a title slide with the presentation title.
+- Every content slide must include its number, title, body text and
+  visual-description block.
+- Add horizontal scroll-snap so the user can swipe / scroll between slides.
+- Inline ALL CSS inside a <style> tag (no external files).
+- Load Google Fonts via <link> tags as shown in the design kit.
+- The HTML must be valid, complete (<!DOCTYPE html> … </html>), and render
+  correctly when opened in a browser.
+- Return ONLY the HTML code, nothing else — no markdown fences, no explanation."""
 
 
 class LLMService:
@@ -129,3 +153,37 @@ class LLMService:
         if isinstance(parsed, list):
             return parsed
         return parsed.get("slides", [])
+
+    async def generate_html(
+        self,
+        title: str,
+        slides: list[dict],
+    ) -> str:
+        """Generate a full HTML presentation using the design kit and slide content."""
+        design_kit = DESIGN_KIT_PATH.read_text(encoding="utf-8")
+        slides_json = json.dumps(slides, ensure_ascii=False, indent=2)
+
+        user_content = (
+            f"## Design Kit Reference\n\n{design_kit}\n\n"
+            f"## Presentation Title\n\n{title}\n\n"
+            f"## Slides Content\n\n{slides_json}"
+        )
+
+        response = await self.client.chat.completions.create(
+            model=self.model,
+            messages=[
+                {"role": "system", "content": GENERATE_HTML_SYSTEM_PROMPT},
+                {"role": "user", "content": user_content},
+            ],
+            temperature=0.7,
+        )
+        html = response.choices[0].message.content
+
+        # Strip markdown fences if LLM wraps the output
+        if html.startswith("```"):
+            first_nl = html.index("\n")
+            html = html[first_nl + 1:]
+        if html.rstrip().endswith("```"):
+            html = html.rstrip()[:-3].rstrip()
+
+        return html

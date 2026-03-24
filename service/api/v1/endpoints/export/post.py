@@ -31,7 +31,7 @@ async def export_html(
         presentation_id, session
     )
     slides = await slide_service.get_slides(presentation_id, session)
-    html_content = export_service.generate_html(presentation, slides)
+    html_content = await export_service.generate_html(presentation, slides)
     return HTMLResponse(content=html_content)
 
 
@@ -45,7 +45,7 @@ async def export_pdf(
         presentation_id, session
     )
     slides = await slide_service.get_slides(presentation_id, session)
-    html_content = export_service.generate_html(presentation, slides)
+    html_content = await export_service.generate_html(presentation, slides)
     pdf_bytes = export_service.generate_pdf(html_content)
     return Response(
         content=pdf_bytes,

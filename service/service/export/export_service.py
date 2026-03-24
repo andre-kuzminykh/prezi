@@ -6,35 +6,33 @@ Service for generating HTML and PDF exports of presentations.
 - Scenario: SC012, SC013
 """
 
-from pathlib import Path
 from typing import Sequence
-
-from jinja2 import Environment, FileSystemLoader
 
 from model.presentations.presentation_model import PresentationModel
 from model.slides.slide_model import SlideModel
-
-TEMPLATES_DIR = Path(__file__).resolve().parent.parent.parent / "templates"
+from service.llm.llm_service import LLMService
 
 
 class ExportService:
     def __init__(self):
-        self.env = Environment(
-            loader=FileSystemLoader(str(TEMPLATES_DIR)),
-            autoescape=False,  # We need raw HTML in the template
-        )
+        self.llm_service = LLMService()
 
-    def generate_html(
+    async def generate_html(
         self,
         presentation: PresentationModel,
         slides: Sequence[SlideModel],
     ) -> str:
-        """Render the presentation as an HTML string using the Jinja2 template."""
-        template = self.env.get_template("presentation.html")
-        return template.render(
-            presentation=presentation,
-            slides=slides,
-        )
+        """Generate HTML presentation via LLM using design kit + slide content."""
+        slides_data = [
+            {
+                "title": s.slide_title,
+                "text": s.slide_text,
+                "visual_description": s.visual_description or "",
+            }
+            for s in slides
+        ]
+        title = presentation.title or "Презентация"
+        return await self.llm_service.generate_html(title, slides_data)
 
     def generate_pdf(self, html_content: str) -> bytes:
         """Convert an HTML string to PDF bytes using WeasyPrint."""
