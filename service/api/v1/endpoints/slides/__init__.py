@@ -13,4 +13,7 @@ router = APIRouter(
     tags=["slides"],
 )
 
-from api.v1.endpoints.slides import get, post, patch, delete  # noqa: E402, F401
+from api.v1.endpoints.slides import get as _get  # noqa: E402, F401
+from api.v1.endpoints.slides import post as _post  # noqa: E402, F401
+from api.v1.endpoints.slides import patch as _patch  # noqa: E402, F401
+from api.v1.endpoints.slides import delete as _delete  # noqa: E402, F401

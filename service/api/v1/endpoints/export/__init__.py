@@ -12,4 +12,4 @@ router = APIRouter(
     tags=["export"],
 )
 
-from api.v1.endpoints.export import post  # noqa: E402, F401
+from api.v1.endpoints.export import post as _post  # noqa: E402, F401

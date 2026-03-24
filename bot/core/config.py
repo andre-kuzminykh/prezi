@@ -18,7 +18,7 @@ class Settings(BaseSettings):
     BOT_TOKEN: str
     BACKEND_URL: str = "http://localhost:8000"
 
-    model_config = {"env_file": str(_env_file), "env_file_encoding": "utf-8"}
+    model_config = {"env_file": str(_env_file), "env_file_encoding": "utf-8", "extra": "ignore"}
 
 
 settings = Settings()
