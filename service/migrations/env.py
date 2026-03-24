@@ -6,7 +6,12 @@ Alembic async migration environment.
 """
 
 import asyncio
+import sys
 from logging.config import fileConfig
+from pathlib import Path
+
+# Add service/ directory to Python path so imports work
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from alembic import context
 from sqlalchemy import pool

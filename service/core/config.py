@@ -6,7 +6,13 @@ All secrets and connection parameters are read from environment variables.
 - Feature: F000 (Application Bootstrap)
 """
 
+from pathlib import Path
 from pydantic_settings import BaseSettings
+
+# Look for .env in service/ dir first, then project root
+_service_dir = Path(__file__).resolve().parent.parent
+_root_dir = _service_dir.parent
+_env_file = _service_dir / ".env" if (_service_dir / ".env").exists() else _root_dir / ".env"
 
 
 class Settings(BaseSettings):
@@ -16,7 +22,7 @@ class Settings(BaseSettings):
     DB_PORT: int = 5432
     DB_USER: str = "postgres"
     DB_PASSWORD: str = "postgres"
-    DB_NAME: str = "prezi"
+    DB_NAME: str = "prezi_db"
 
     OPENAI_API_KEY: str = ""
     OPENAI_MODEL: str = "gpt-4.1"
@@ -28,9 +34,7 @@ class Settings(BaseSettings):
             f"@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
         )
 
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
+    model_config = {"env_file": str(_env_file), "env_file_encoding": "utf-8"}
 
 
 config = Settings()
