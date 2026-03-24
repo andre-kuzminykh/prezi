@@ -15,8 +15,11 @@ from aiogram import types
 from aiogram.fsm.context import FSMContext
 
 from core.loader import bot
+from service.api.presentation_api import PresentationAPI
 
 logger = logging.getLogger(__name__)
+
+_api = PresentationAPI()
 
 
 class EditSlideTrigger:
@@ -42,7 +45,8 @@ class EditSlideTrigger:
             await bot.download_file(file.file_path, destination=buf)
             import base64
 
-            command_text = base64.b64encode(buf.getvalue()).decode()
+            audio_b64 = base64.b64encode(buf.getvalue()).decode()
+            command_text = await _api.transcribe(audio_b64)
         elif message.text:
             command_text = message.text
 

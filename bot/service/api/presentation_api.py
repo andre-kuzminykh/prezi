@@ -135,6 +135,18 @@ class PresentationAPI:
         )
         return {"content": resp.text}
 
+    # Transcription
+
+    async def transcribe(self, audio_base64: str) -> str:
+        """Transcribe base64-encoded audio via the backend."""
+        resp = await self._request(
+            "POST",
+            "/transcribe",
+            json={"audio_base64": audio_base64},
+            timeout=httpx.Timeout(60.0),
+        )
+        return resp.json()["text"]
+
     async def export_pdf(self, presentation_id: int) -> bytes:
         resp = await self._request(
             "POST",
