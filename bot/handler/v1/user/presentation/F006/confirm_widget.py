@@ -1,4 +1,4 @@
-"""Widget: Generate and export presentation.
+"""Widget: Generate and export presentation as HTML.
 
 ## Traceability
 Feature: F006, F007, F008
@@ -30,28 +30,24 @@ async def on_done(
     callback_data: PresentationCallback,
     state: FSMContext,
 ) -> None:
-    """Generate HTML + PDF and send PDF to user."""
+    """Generate HTML presentation via LLM and send as file."""
     presentation_id = callback_data.presentation_id
 
-    # Answer callback immediately to avoid Telegram timeout
     await callback.answer()
-    await callback.message.edit_text(vocab.GENERATING_PDF)
+    await callback.message.edit_text(vocab.GENERATING_HTML)
 
     try:
-        # Generate PDF via backend
-        pdf_bytes = await api.export_pdf(presentation_id)
+        html_content = await api.export_html(presentation_id)
 
-        # Send PDF file
         doc = BufferedInputFile(
-            file=pdf_bytes,
-            filename=f"presentation_{presentation_id}.pdf",
+            file=html_content.encode("utf-8"),
+            filename=f"presentation_{presentation_id}.html",
         )
         await callback.message.answer_document(
             document=doc,
             caption=vocab.EXPORT_READY,
         )
 
-        # Delete the "generating" message
         try:
             await callback.message.delete()
         except Exception:

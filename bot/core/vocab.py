@@ -32,6 +32,7 @@ PRESENTATION_CREATED = "Презентация создана! Отправля�
 
 INPUT_RECEIVED = "✅ Материал получен."
 
+GENERATING_HTML = "⏳ Генерирую презентацию..."
 GENERATING_PDF = "⏳ Генерирую PDF..."
 
 # Button texts

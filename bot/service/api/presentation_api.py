@@ -127,13 +127,13 @@ class PresentationAPI:
 
     # Export
 
-    async def export_html(self, presentation_id: int) -> dict:
+    async def export_html(self, presentation_id: int) -> str:
         resp = await self._request(
             "POST",
             f"/presentations/{presentation_id}/export/html",
-            timeout=httpx.Timeout(60.0),
+            timeout=httpx.Timeout(120.0),
         )
-        return {"content": resp.text}
+        return resp.text
 
     # Transcription
 
