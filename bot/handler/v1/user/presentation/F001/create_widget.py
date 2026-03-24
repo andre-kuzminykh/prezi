@@ -16,9 +16,6 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 from callback.presentation_callback import PresentationCallback
 from core import vocab
 from node.presentation.answer.error_answer import ErrorAnswer
-from node.presentation.answer.presentation_created_answer import (
-    PresentationCreatedAnswer,
-)
 from node.presentation.answer.slide_view_answer import SlideViewAnswer
 from node.presentation.code.create_presentation_code import CreatePresentationCode
 from node.presentation.trigger.create_presentation_trigger import (
@@ -45,28 +42,6 @@ async def cmd_start(message: types.Message, state: FSMContext) -> None:
     await message.answer(vocab.WELCOME, reply_markup=kb.as_markup())
 
 
-@router.message(Command("new"))
-async def cmd_new(message: types.Message, state: FSMContext) -> None:
-    """Handle /new - create a new presentation directly."""
-    await state.clear()
-
-    result = await api.create_presentation(message.from_user.id)
-    presentation_id = result["id"]
-    await state.update_data(presentation_id=presentation_id)
-    await state.set_state(PresentationState.collecting_input)
-
-    kb = InlineKeyboardBuilder()
-    kb.button(
-        text=vocab.BTN_STRUCTURE,
-        callback_data=PresentationCallback(
-            action="structure",
-            presentation_id=presentation_id,
-        ),
-    )
-
-    await message.answer(vocab.PRESENTATION_CREATED, reply_markup=kb.as_markup())
-
-
 @router.callback_query(F.data == "new_presentation")
 async def on_new_presentation(
     callback: types.CallbackQuery, state: FSMContext
@@ -74,23 +49,23 @@ async def on_new_presentation(
     """Handle Create button press."""
     await state.clear()
 
-    result = await api.create_presentation(callback.from_user.id)
-    presentation_id = result["id"]
-    await state.update_data(presentation_id=presentation_id)
-    await state.set_state(PresentationState.collecting_input)
+    try:
+        result = await api.create_presentation(callback.from_user.id)
+        presentation_id = result["id"]
+        await state.update_data(presentation_id=presentation_id)
+        await state.set_state(PresentationState.collecting_input)
 
-    kb = InlineKeyboardBuilder()
-    kb.button(
-        text=vocab.BTN_STRUCTURE,
-        callback_data=PresentationCallback(
-            action="structure",
-            presentation_id=presentation_id,
-        ),
-    )
+        await callback.message.edit_text(vocab.CREATE_PROMPT)
+    except Exception as exc:
+        logger.exception("Create presentation failed")
+        await ErrorAnswer.run(callback, {"error": str(exc)})
 
-    await callback.message.edit_text(
-        vocab.PRESENTATION_CREATED, reply_markup=kb.as_markup()
-    )
+    await callback.answer()
+
+
+@router.callback_query(F.data == "noop")
+async def on_noop(callback: types.CallbackQuery) -> None:
+    """Handle noop callback (inactive buttons)."""
     await callback.answer()
 
 
@@ -103,7 +78,16 @@ async def on_text_input(message: types.Message, state: FSMContext) -> None:
     if result["answer_name"] == "error":
         await ErrorAnswer.run(message, result["data"])
     else:
-        await PresentationCreatedAnswer.run(message, result["data"])
+        presentation_id = result["data"]["presentation_id"]
+        kb = InlineKeyboardBuilder()
+        kb.button(
+            text=vocab.BTN_STRUCTURE,
+            callback_data=PresentationCallback(
+                action="structure",
+                presentation_id=presentation_id,
+            ),
+        )
+        await message.answer(vocab.INPUT_RECEIVED, reply_markup=kb.as_markup())
 
 
 @router.message(PresentationState.collecting_input, F.voice)
@@ -115,7 +99,16 @@ async def on_voice_input(message: types.Message, state: FSMContext) -> None:
     if result["answer_name"] == "error":
         await ErrorAnswer.run(message, result["data"])
     else:
-        await PresentationCreatedAnswer.run(message, result["data"])
+        presentation_id = result["data"]["presentation_id"]
+        kb = InlineKeyboardBuilder()
+        kb.button(
+            text=vocab.BTN_STRUCTURE,
+            callback_data=PresentationCallback(
+                action="structure",
+                presentation_id=presentation_id,
+            ),
+        )
+        await message.answer(vocab.INPUT_RECEIVED, reply_markup=kb.as_markup())
 
 
 @router.callback_query(
@@ -135,7 +128,7 @@ async def on_structure(
         slides = await api.structure_presentation(presentation_id)
 
         if not slides:
-            await callback.message.edit_text(vocab.ERROR.format(error="Нет слайдов"))
+            await callback.message.edit_text(vocab.NO_SLIDES)
             await callback.answer()
             return
 

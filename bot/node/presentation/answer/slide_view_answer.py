@@ -10,7 +10,7 @@ from __future__ import annotations
 from typing import Any
 
 from aiogram import types
-from aiogram.utils.keyboard import InlineKeyboardBuilder
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 from callback.presentation_callback import (
     PresentationCallback,
@@ -37,95 +37,74 @@ class SlideViewAnswer:
         text = vocab.SLIDE_TEMPLATE.format(
             index=idx + 1,
             total=total,
-            title=slide.get("title", ""),
-            text=slide.get("text", ""),
-            visual_description=slide.get("visual_description", ""),
+            title=slide.get("slide_title", slide.get("title", "")),
+            text=slide.get("slide_text", slide.get("text", "")),
+            visual_description=slide.get("visual_description", "—"),
         )
 
-        kb = InlineKeyboardBuilder()
-
-        # Navigation row
+        # Row 1: Navigation [◀️] [1/5] [▶️]
         if idx > 0:
-            kb.button(
+            btn_prev = InlineKeyboardButton(
                 text=vocab.BTN_PREV,
                 callback_data=SlideNavigationCallback(
                     action="prev",
                     presentation_id=presentation_id,
                     slide_index=idx - 1,
-                ),
+                ).pack(),
             )
+        else:
+            btn_prev = InlineKeyboardButton(text=vocab.BTN_INACTIVE, callback_data="noop")
+
+        btn_counter = InlineKeyboardButton(
+            text=f"{idx + 1}/{total}",
+            callback_data="noop",
+        )
+
         if idx < total - 1:
-            kb.button(
+            btn_next = InlineKeyboardButton(
                 text=vocab.BTN_NEXT,
                 callback_data=SlideNavigationCallback(
                     action="next",
                     presentation_id=presentation_id,
                     slide_index=idx + 1,
-                ),
+                ).pack(),
             )
+        else:
+            btn_next = InlineKeyboardButton(text=vocab.BTN_INACTIVE, callback_data="noop")
 
-        kb.adjust(2)
-
-        # Action row
+        # Row 2: Edit
         slide_id = slide.get("id", 0)
-        action_row = InlineKeyboardBuilder()
-        action_row.button(
+        btn_edit = InlineKeyboardButton(
             text=vocab.BTN_EDIT,
             callback_data=SlideActionCallback(
                 action="edit",
                 presentation_id=presentation_id,
                 slide_id=slide_id,
-            ),
+            ).pack(),
         )
-        action_row.button(
-            text=vocab.BTN_DELETE,
-            callback_data=SlideActionCallback(
-                action="delete",
-                presentation_id=presentation_id,
-                slide_id=slide_id,
-            ),
-        )
-        action_row.button(
-            text=vocab.BTN_ADD_SLIDE,
-            callback_data=SlideActionCallback(
-                action="add_after",
-                presentation_id=presentation_id,
-                slide_id=slide_id,
-            ),
-        )
-        action_row.adjust(3)
 
-        # Presentation-level row
-        pres_row = InlineKeyboardBuilder()
-        pres_row.button(
-            text=vocab.BTN_CONFIRM,
+        # Row 3: Done
+        btn_done = InlineKeyboardButton(
+            text=vocab.BTN_DONE,
             callback_data=PresentationCallback(
-                action="confirm",
+                action="done",
                 presentation_id=presentation_id,
-            ),
+            ).pack(),
         )
-        pres_row.button(
-            text=vocab.BTN_EXPORT_HTML,
-            callback_data=PresentationCallback(
-                action="export_html",
-                presentation_id=presentation_id,
-            ),
-        )
-        pres_row.button(
-            text=vocab.BTN_EXPORT_PDF,
-            callback_data=PresentationCallback(
-                action="export_pdf",
-                presentation_id=presentation_id,
-            ),
-        )
-        pres_row.adjust(3)
 
-        kb.attach(action_row)
-        kb.attach(pres_row)
-
-        markup = kb.as_markup()
+        markup = InlineKeyboardMarkup(
+            inline_keyboard=[
+                [btn_prev, btn_counter, btn_next],
+                [btn_edit],
+                [btn_done],
+            ]
+        )
 
         if isinstance(event, types.CallbackQuery):
-            await event.message.edit_text(text, reply_markup=markup)
+            try:
+                await event.message.edit_text(text, reply_markup=markup)
+            except Exception:
+                # If edit fails (same content), just answer the callback
+                pass
         else:
             await event.answer(text, reply_markup=markup)

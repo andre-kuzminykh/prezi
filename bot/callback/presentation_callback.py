@@ -6,24 +6,21 @@ Component: Callback / PresentationCallback
 from aiogram.filters.callback_data import CallbackData
 
 
-class SlideNavigationCallback(CallbackData, prefix="slide"):
+class SlideNavigationCallback(CallbackData, prefix="sn"):
     """Navigate between slides."""
-
-    action: str  # prev / next / view
+    action: str  # prev / next
     presentation_id: int
     slide_index: int
 
 
-class SlideActionCallback(CallbackData, prefix="sact"):
+class SlideActionCallback(CallbackData, prefix="sa"):
     """Actions on a specific slide."""
-
-    action: str  # edit / delete / add_after / confirm
+    action: str  # edit
     presentation_id: int
     slide_id: int
 
 
-class PresentationCallback(CallbackData, prefix="pres"):
+class PresentationCallback(CallbackData, prefix="pc"):
     """Presentation-level actions."""
-
-    action: str  # structure / export_html / export_pdf / confirm / back
+    action: str  # structure / done
     presentation_id: int

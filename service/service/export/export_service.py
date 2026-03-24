@@ -6,7 +6,7 @@ Service for generating HTML and PDF exports of presentations.
 - Scenario: SC012, SC013
 """
 
-import os
+from pathlib import Path
 from typing import Sequence
 
 from jinja2 import Environment, FileSystemLoader
@@ -14,14 +14,14 @@ from jinja2 import Environment, FileSystemLoader
 from model.presentations.presentation_model import PresentationModel
 from model.slides.slide_model import SlideModel
 
-TEMPLATES_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "..", "templates")
+TEMPLATES_DIR = Path(__file__).resolve().parent.parent.parent / "templates"
 
 
 class ExportService:
     def __init__(self):
         self.env = Environment(
-            loader=FileSystemLoader(os.path.abspath(TEMPLATES_DIR)),
-            autoescape=True,
+            loader=FileSystemLoader(str(TEMPLATES_DIR)),
+            autoescape=False,  # We need raw HTML in the template
         )
 
     def generate_html(
