@@ -7,6 +7,7 @@ LLM service for AI-powered text structuring and slide editing.
 - Scenario: SC004, SC005, SC006, SC007
 """
 
+import io
 import json
 
 from openai import AsyncOpenAI
@@ -46,6 +47,16 @@ class LLMService:
     def __init__(self):
         self.client = AsyncOpenAI(api_key=config.OPENAI_API_KEY)
         self.model = config.OPENAI_MODEL
+
+    async def transcribe_audio(self, audio_bytes: bytes) -> str:
+        """Transcribe audio bytes using OpenAI Whisper."""
+        audio_file = io.BytesIO(audio_bytes)
+        audio_file.name = "voice.ogg"
+        response = await self.client.audio.transcriptions.create(
+            model="whisper-1",
+            file=audio_file,
+        )
+        return response.text
 
     async def structure_text(self, text: str) -> list[dict]:
         """Analyze text and return a structured list of slides."""

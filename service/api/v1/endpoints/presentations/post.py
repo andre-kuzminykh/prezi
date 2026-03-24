@@ -12,7 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.v1.endpoints.presentations import router
 from core.database import get_session
-from model.enums import PresentationStatus
+from model.enums import InputType, PresentationStatus
 from schema.inputs.input_message_schema import (
     InputMessageCreateSchema,
     InputMessageResponseSchema,
@@ -50,7 +50,20 @@ async def add_input(
     data: InputMessageCreateSchema,
     session: AsyncSession = Depends(get_session),
 ):
-    """Add an input message to a presentation."""
+    """Add an input message to a presentation.
+
+    For voice inputs the raw_content is expected to be base64-encoded audio.
+    The endpoint decodes it, sends it to OpenAI Whisper for transcription,
+    and stores the transcript alongside the raw audio.
+    """
+    if data.type == InputType.voice and data.transcript is None:
+        import base64
+        import io
+
+        audio_bytes = base64.b64decode(data.raw_content)
+        transcript = await llm_service.transcribe_audio(audio_bytes)
+        data = data.model_copy(update={"transcript": transcript})
+
     return await presentation_service.add_input(presentation_id, data, session)
 
 
