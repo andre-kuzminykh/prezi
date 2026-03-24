@@ -7,6 +7,8 @@ Scenarios: SC006, SC007
 """
 from __future__ import annotations
 
+import html
+import logging
 from typing import Any
 
 from aiogram import types
@@ -18,6 +20,8 @@ from callback.presentation_callback import (
     SlideNavigationCallback,
 )
 from core import vocab
+
+logger = logging.getLogger(__name__)
 
 
 class SlideViewAnswer:
@@ -37,9 +41,9 @@ class SlideViewAnswer:
         text = vocab.SLIDE_TEMPLATE.format(
             index=idx + 1,
             total=total,
-            title=slide.get("slide_title", slide.get("title", "")),
-            text=slide.get("slide_text", slide.get("text", "")),
-            visual_description=slide.get("visual_description", "—"),
+            title=html.escape(slide.get("slide_title", slide.get("title", ""))),
+            text=html.escape(slide.get("slide_text", slide.get("text", ""))),
+            visual_description=html.escape(slide.get("visual_description", "—")),
         )
 
         # Row 1: Navigation [◀️] [1/5] [▶️]
@@ -104,7 +108,7 @@ class SlideViewAnswer:
             try:
                 await event.message.edit_text(text, reply_markup=markup)
             except Exception:
-                # If edit fails (same content), just answer the callback
-                pass
+                logger.exception("SlideViewAnswer: edit_text failed, sending new message")
+                await event.message.answer(text, reply_markup=markup)
         else:
             await event.answer(text, reply_markup=markup)
