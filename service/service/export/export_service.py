@@ -34,39 +34,38 @@ class ExportService:
         title = presentation.title or "Презентация"
         return await self.llm_service.generate_html(title, slides_data)
 
-    def generate_pdf(self, html_content: str) -> bytes:
-        """Convert LLM-generated HTML into a landscape PDF with one slide per page."""
-        from weasyprint import HTML
+    async def generate_pdf(self, html_content: str) -> bytes:
+        """Render HTML in headless Chromium and print to landscape PDF.
 
-        # Inject print-specific CSS so each .slide becomes a separate
-        # landscape page and horizontal scroll layout is removed.
-        print_css = """
-<style>
-@page { size: landscape; margin: 0; }
-html, body {
-    display: block !important;
-    overflow: visible !important;
-    width: auto !important;
-    height: auto !important;
-    scroll-snap-type: none !important;
-}
-.slide {
-    width: 100vw !important;
-    height: 100vh !important;
-    page-break-after: always;
-    break-after: page;
-    flex: none !important;
-    scroll-snap-align: unset !important;
-}
-.slide:last-child { page-break-after: auto; break-after: auto; }
-.aurora-blob { animation: none !important; }
-</style>
-"""
-        # Insert before closing </head>
-        if "</head>" in html_content:
-            html_content = html_content.replace("</head>", print_css + "</head>")
-        else:
-            html_content = print_css + html_content
+        Each slide (100vw x 100vh) becomes a separate PDF page that looks
+        exactly like it does in the browser.
+        """
+        from playwright.async_api import async_playwright
 
-        pdf_bytes = HTML(string=html_content).write_pdf()
+        async with async_playwright() as pw:
+            browser = await pw.chromium.launch()
+            page = await browser.new_page(viewport={"width": 1280, "height": 720})
+            await page.set_content(html_content, wait_until="networkidle")
+
+            # Count slides to set the correct page dimensions
+            slide_count = await page.locator(".slide").count()
+            if slide_count == 0:
+                slide_count = 1
+
+            # Scroll through all slides so fonts / animations settle
+            for i in range(slide_count):
+                await page.evaluate(f"window.scrollTo({i * 1280}, 0)")
+                await page.wait_for_timeout(100)
+            await page.evaluate("window.scrollTo(0, 0)")
+
+            pdf_bytes = await page.pdf(
+                width="1280px",
+                height="720px",
+                landscape=True,
+                print_background=True,
+                prefer_css_page_size=False,
+            )
+
+            await browser.close()
+
         return pdf_bytes

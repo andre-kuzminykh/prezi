@@ -46,7 +46,7 @@ async def export_pdf(
     )
     slides = await slide_service.get_slides(presentation_id, session)
     html_content = await export_service.generate_html(presentation, slides)
-    pdf_bytes = export_service.generate_pdf(html_content)
+    pdf_bytes = await export_service.generate_pdf(html_content)
     return Response(
         content=pdf_bytes,
         media_type="application/pdf",
