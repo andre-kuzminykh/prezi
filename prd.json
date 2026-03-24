@@ -1,0 +1,428 @@
+{
+  "project": "AI Presentation Builder (Prezi Bot)",
+  "version": "1.0.0",
+  "description": "A Telegram bot that allows users to create, edit, and export presentations using natural language and voice input, powered by AI.",
+  "features": [
+    {
+      "feature_id": "F001",
+      "general_info": {
+        "title": "Create Presentation from Text and Voice",
+        "description": "Users can create a new presentation by sending a text message or a voice message to the Telegram bot. Voice messages are transcribed automatically. The AI processes the input and generates an initial set of slides.",
+        "priority": "high",
+        "status": "planned"
+      },
+      "goal_and_context": {
+        "goal": "Allow users to quickly bootstrap a presentation by describing its topic and content in natural language or via voice.",
+        "context": "This is the primary entry point for the product. Users interact with the Telegram bot, send a prompt describing the desired presentation, and the system generates a structured slide deck."
+      },
+      "actors_and_roles": [
+        { "actor": "User", "role": "Initiates presentation creation by sending text or voice input via Telegram." },
+        { "actor": "Telegram Bot", "role": "Receives user input, forwards it to the backend service." },
+        { "actor": "Backend Service", "role": "Processes the input, calls the AI model, and stores the generated presentation." },
+        { "actor": "AI Model (OpenAI)", "role": "Generates slide content based on the user prompt." }
+      ],
+      "business_rules": [
+        { "rule_id": "BR001", "description": "Each user may have multiple presentations stored simultaneously." },
+        { "rule_id": "BR002", "description": "Voice messages must be transcribed to text before processing." },
+        { "rule_id": "BR003", "description": "The AI-generated presentation must contain between 3 and 20 slides." },
+        { "rule_id": "BR004", "description": "Each presentation must be associated with the Telegram user ID of the creator." }
+      ],
+      "acceptance_criteria": [
+        {
+          "scenario_id": "SC001",
+          "title": "Create presentation from text",
+          "given": "The user is in a chat with the bot",
+          "when": "The user sends a text message describing a presentation topic",
+          "then": "The system generates a presentation with structured slides and confirms creation to the user"
+        },
+        {
+          "scenario_id": "SC002",
+          "title": "Create presentation from voice",
+          "given": "The user is in a chat with the bot",
+          "when": "The user sends a voice message describing a presentation topic",
+          "then": "The system transcribes the voice message, generates a presentation, and confirms creation to the user"
+        },
+        {
+          "scenario_id": "SC003",
+          "title": "Handle empty or unintelligible input",
+          "given": "The user is in a chat with the bot",
+          "when": "The user sends an empty message or an unintelligible voice message",
+          "then": "The system responds with a helpful error message asking the user to try again"
+        }
+      ],
+      "non_functional_requirements": [
+        { "nfr_id": "NFR001", "category": "Performance", "description": "Presentation generation must complete within 30 seconds." },
+        { "nfr_id": "NFR002", "category": "Reliability", "description": "Voice transcription accuracy must be at least 90% for clear audio." },
+        { "nfr_id": "NFR003", "category": "Scalability", "description": "The system must support at least 100 concurrent presentation generation requests." }
+      ],
+      "test_cases": [
+        { "test_id": "T001", "title": "Text input generates presentation", "steps": ["Send a text message: 'Create a presentation about machine learning'", "Wait for the bot response"], "expected_result": "Bot responds with confirmation and a summary of generated slides." },
+        { "test_id": "T002", "title": "Voice input generates presentation", "steps": ["Send a voice message describing a presentation topic", "Wait for the bot response"], "expected_result": "Bot transcribes the voice, generates slides, and responds with confirmation." },
+        { "test_id": "T003", "title": "Empty input is rejected", "steps": ["Send an empty text message to the bot"], "expected_result": "Bot responds with an error message prompting the user to provide content." }
+      ]
+    },
+    {
+      "feature_id": "F002",
+      "general_info": {
+        "title": "Auto Slide Structuring",
+        "description": "The system automatically structures the AI-generated content into well-organized slides with titles, bullet points, and logical flow.",
+        "priority": "high",
+        "status": "planned"
+      },
+      "goal_and_context": {
+        "goal": "Ensure that generated presentations have a professional structure with clear slide titles, concise bullet points, and a logical narrative flow.",
+        "context": "Raw AI output needs to be parsed and structured into a slide format. Each slide should have a title and body content. The system applies formatting rules and content limits per slide."
+      },
+      "actors_and_roles": [
+        { "actor": "Backend Service", "role": "Parses AI output and applies structuring rules." },
+        { "actor": "AI Model (OpenAI)", "role": "Generates raw content that is then structured into slides." }
+      ],
+      "business_rules": [
+        { "rule_id": "BR005", "description": "Each slide must have a title of no more than 100 characters." },
+        { "rule_id": "BR006", "description": "Each slide body must contain no more than 6 bullet points." },
+        { "rule_id": "BR007", "description": "The first slide must be a title slide with the presentation topic." },
+        { "rule_id": "BR008", "description": "The last slide should be a summary or conclusion slide." }
+      ],
+      "acceptance_criteria": [
+        {
+          "scenario_id": "SC004",
+          "title": "Slides are structured with titles and bullets",
+          "given": "The AI has generated raw content for a presentation",
+          "when": "The backend processes the AI output",
+          "then": "Each slide has a title and a list of bullet points, with a title slide first and a conclusion slide last"
+        },
+        {
+          "scenario_id": "SC005",
+          "title": "Slide count is within limits",
+          "given": "The AI has generated content",
+          "when": "The backend structures the slides",
+          "then": "The total number of slides is between 3 and 20"
+        }
+      ],
+      "non_functional_requirements": [
+        { "nfr_id": "NFR004", "category": "Performance", "description": "Slide structuring must complete within 5 seconds after AI content generation." },
+        { "nfr_id": "NFR005", "category": "Maintainability", "description": "Structuring rules must be configurable without code changes." }
+      ],
+      "test_cases": [
+        { "test_id": "T004", "title": "Slides have correct structure", "steps": ["Generate a presentation from a text prompt", "Inspect the resulting slide data"], "expected_result": "Each slide has a non-empty title (max 100 chars) and body with up to 6 bullet points." },
+        { "test_id": "T005", "title": "First and last slides are correct", "steps": ["Generate a presentation", "Check the first and last slides"], "expected_result": "First slide is a title slide; last slide is a summary/conclusion." }
+      ]
+    },
+    {
+      "feature_id": "F003",
+      "general_info": {
+        "title": "Slide Navigation Widget in Telegram",
+        "description": "Users can navigate through their presentation slides directly within the Telegram chat using inline keyboard buttons (Previous, Next, slide number indicator).",
+        "priority": "high",
+        "status": "planned"
+      },
+      "goal_and_context": {
+        "goal": "Provide an intuitive in-chat navigation experience so users can review each slide without leaving Telegram.",
+        "context": "After a presentation is generated or loaded, the bot displays the current slide content and provides navigation buttons. The slide content is shown as a formatted text message."
+      },
+      "actors_and_roles": [
+        { "actor": "User", "role": "Navigates through slides using inline buttons." },
+        { "actor": "Telegram Bot", "role": "Renders slide content and inline keyboard for navigation." },
+        { "actor": "Backend Service", "role": "Serves slide data for the requested slide index." }
+      ],
+      "business_rules": [
+        { "rule_id": "BR009", "description": "The Previous button must be hidden on the first slide." },
+        { "rule_id": "BR010", "description": "The Next button must be hidden on the last slide." },
+        { "rule_id": "BR011", "description": "The slide indicator must show the format 'Slide X of Y'." },
+        { "rule_id": "BR012", "description": "Navigation must update the existing message rather than sending a new one." }
+      ],
+      "acceptance_criteria": [
+        {
+          "scenario_id": "SC006",
+          "title": "Navigate to next slide",
+          "given": "The user is viewing slide 1 of a 5-slide presentation",
+          "when": "The user taps the Next button",
+          "then": "The message updates to show slide 2 with the indicator 'Slide 2 of 5'"
+        },
+        {
+          "scenario_id": "SC007",
+          "title": "Navigate to previous slide",
+          "given": "The user is viewing slide 3 of a 5-slide presentation",
+          "when": "The user taps the Previous button",
+          "then": "The message updates to show slide 2 with the indicator 'Slide 2 of 5'"
+        },
+        {
+          "scenario_id": "SC008",
+          "title": "First slide hides Previous button",
+          "given": "The user is viewing slide 1",
+          "when": "The slide is rendered",
+          "then": "Only the Next button is displayed"
+        },
+        {
+          "scenario_id": "SC009",
+          "title": "Last slide hides Next button",
+          "given": "The user is viewing the last slide",
+          "when": "The slide is rendered",
+          "then": "Only the Previous button is displayed"
+        }
+      ],
+      "non_functional_requirements": [
+        { "nfr_id": "NFR006", "category": "Usability", "description": "Slide navigation must respond within 1 second of button press." },
+        { "nfr_id": "NFR007", "category": "Usability", "description": "Slide content must be readable on mobile devices without horizontal scrolling." }
+      ],
+      "test_cases": [
+        { "test_id": "T006", "title": "Next button navigates forward", "steps": ["View slide 1", "Tap Next"], "expected_result": "Slide 2 is displayed with correct indicator." },
+        { "test_id": "T007", "title": "Previous button navigates backward", "steps": ["View slide 3", "Tap Previous"], "expected_result": "Slide 2 is displayed with correct indicator." },
+        { "test_id": "T008", "title": "Boundary buttons are hidden", "steps": ["View slide 1, check buttons", "Navigate to last slide, check buttons"], "expected_result": "Previous is hidden on slide 1; Next is hidden on the last slide." }
+      ]
+    },
+    {
+      "feature_id": "F004",
+      "general_info": {
+        "title": "Edit Slides via Natural Language",
+        "description": "Users can edit individual slides or the entire presentation by sending natural language instructions to the bot (e.g., 'Make slide 3 more concise', 'Add a slide about pricing').",
+        "priority": "high",
+        "status": "planned"
+      },
+      "goal_and_context": {
+        "goal": "Enable users to iteratively refine their presentations using conversational commands instead of manual editing.",
+        "context": "After generating a presentation, users often want to adjust content. This feature allows them to describe changes in plain language, and the AI applies the edits to the relevant slides."
+      },
+      "actors_and_roles": [
+        { "actor": "User", "role": "Sends edit instructions in natural language." },
+        { "actor": "Telegram Bot", "role": "Receives edit instructions and forwards them to the backend." },
+        { "actor": "Backend Service", "role": "Identifies the target slides, calls the AI model with edit instructions, and updates the stored presentation." },
+        { "actor": "AI Model (OpenAI)", "role": "Processes edit instructions and generates updated slide content." }
+      ],
+      "business_rules": [
+        { "rule_id": "BR013", "description": "Edit commands must reference a valid presentation belonging to the user." },
+        { "rule_id": "BR014", "description": "If the user references a specific slide number, it must exist in the presentation." },
+        { "rule_id": "BR015", "description": "Adding a new slide must not exceed the maximum of 20 slides." },
+        { "rule_id": "BR016", "description": "Deleting slides must not reduce the presentation below 3 slides." }
+      ],
+      "acceptance_criteria": [
+        {
+          "scenario_id": "SC010",
+          "title": "Edit a specific slide",
+          "given": "The user has an active presentation with 5 slides",
+          "when": "The user sends 'Make slide 3 shorter'",
+          "then": "Slide 3 is updated with more concise content and the user sees the updated slide"
+        },
+        {
+          "scenario_id": "SC011",
+          "title": "Add a new slide",
+          "given": "The user has an active presentation with 5 slides",
+          "when": "The user sends 'Add a slide about our team after slide 4'",
+          "then": "A new slide is inserted at position 5, and the presentation now has 6 slides"
+        },
+        {
+          "scenario_id": "SC012",
+          "title": "Delete a slide",
+          "given": "The user has an active presentation with 5 slides",
+          "when": "The user sends 'Remove slide 2'",
+          "then": "Slide 2 is removed, the presentation now has 4 slides, and slide numbers are recalculated"
+        },
+        {
+          "scenario_id": "SC013",
+          "title": "Reject invalid slide reference",
+          "given": "The user has an active presentation with 5 slides",
+          "when": "The user sends 'Edit slide 10'",
+          "then": "The bot responds with an error indicating that slide 10 does not exist"
+        }
+      ],
+      "non_functional_requirements": [
+        { "nfr_id": "NFR008", "category": "Performance", "description": "Slide edits must be applied within 15 seconds." },
+        { "nfr_id": "NFR009", "category": "Reliability", "description": "Failed edits must not corrupt the existing presentation data." }
+      ],
+      "test_cases": [
+        { "test_id": "T009", "title": "Edit specific slide content", "steps": ["Create a presentation", "Send 'Make slide 2 more detailed'", "View slide 2"], "expected_result": "Slide 2 content is updated with more detail." },
+        { "test_id": "T010", "title": "Add a slide via natural language", "steps": ["Create a 5-slide presentation", "Send 'Add a slide about conclusions'", "Check slide count"], "expected_result": "Presentation now has 6 slides with the new slide added." },
+        { "test_id": "T011", "title": "Delete a slide via natural language", "steps": ["Create a 5-slide presentation", "Send 'Delete slide 3'", "Check slide count"], "expected_result": "Presentation now has 4 slides." },
+        { "test_id": "T012", "title": "Cannot delete below minimum", "steps": ["Create a 3-slide presentation", "Send 'Delete slide 2'"], "expected_result": "Bot responds with an error that the presentation cannot have fewer than 3 slides." }
+      ]
+    },
+    {
+      "feature_id": "F005",
+      "general_info": {
+        "title": "View Slide Structure",
+        "description": "Users can request an overview of the entire presentation structure, showing all slide titles and their positions in a compact list format.",
+        "priority": "medium",
+        "status": "planned"
+      },
+      "goal_and_context": {
+        "goal": "Give users a bird's-eye view of their presentation to understand the overall flow and identify slides to edit.",
+        "context": "Before making edits, users need to see the full structure. This command returns a numbered list of slide titles."
+      },
+      "actors_and_roles": [
+        { "actor": "User", "role": "Requests the presentation structure overview." },
+        { "actor": "Telegram Bot", "role": "Formats and displays the structure as a numbered list." },
+        { "actor": "Backend Service", "role": "Retrieves all slide titles for the active presentation." }
+      ],
+      "business_rules": [
+        { "rule_id": "BR017", "description": "The structure view must show slide numbers and titles only." },
+        { "rule_id": "BR018", "description": "If no active presentation exists, the bot must prompt the user to create one." }
+      ],
+      "acceptance_criteria": [
+        {
+          "scenario_id": "SC014",
+          "title": "View structure of existing presentation",
+          "given": "The user has an active presentation with 5 slides",
+          "when": "The user sends the /structure command",
+          "then": "The bot responds with a numbered list of all 5 slide titles"
+        },
+        {
+          "scenario_id": "SC015",
+          "title": "No active presentation",
+          "given": "The user does not have an active presentation",
+          "when": "The user sends the /structure command",
+          "then": "The bot responds with a message prompting the user to create a presentation first"
+        }
+      ],
+      "non_functional_requirements": [
+        { "nfr_id": "NFR010", "category": "Performance", "description": "Structure view must load within 2 seconds." }
+      ],
+      "test_cases": [
+        { "test_id": "T013", "title": "Structure command returns slide list", "steps": ["Create a presentation", "Send /structure"], "expected_result": "Bot responds with numbered list of slide titles." },
+        { "test_id": "T014", "title": "Structure command with no presentation", "steps": ["Ensure no active presentation", "Send /structure"], "expected_result": "Bot responds with prompt to create a presentation." }
+      ]
+    },
+    {
+      "feature_id": "F006",
+      "general_info": {
+        "title": "Confirm Final Version",
+        "description": "Users can mark their presentation as finalized, locking it from further edits and making it available for export.",
+        "priority": "medium",
+        "status": "planned"
+      },
+      "goal_and_context": {
+        "goal": "Provide a clear workflow step where users confirm they are satisfied with the presentation before exporting.",
+        "context": "Before generating HTML or PDF exports, users should confirm the final version. This prevents accidental exports of incomplete presentations."
+      },
+      "actors_and_roles": [
+        { "actor": "User", "role": "Confirms the presentation is final." },
+        { "actor": "Telegram Bot", "role": "Asks for confirmation and updates the presentation status." },
+        { "actor": "Backend Service", "role": "Updates the presentation status to 'finalized' in the database." }
+      ],
+      "business_rules": [
+        { "rule_id": "BR019", "description": "A finalized presentation cannot be edited unless the user explicitly unlocks it." },
+        { "rule_id": "BR020", "description": "The bot must ask for explicit confirmation before finalizing (Yes/No buttons)." },
+        { "rule_id": "BR021", "description": "Only the presentation owner can finalize a presentation." }
+      ],
+      "acceptance_criteria": [
+        {
+          "scenario_id": "SC016",
+          "title": "Finalize presentation",
+          "given": "The user has an active presentation in draft status",
+          "when": "The user sends /finalize and confirms with Yes",
+          "then": "The presentation status is updated to 'finalized' and the bot confirms the action"
+        },
+        {
+          "scenario_id": "SC017",
+          "title": "Cancel finalization",
+          "given": "The user has an active presentation in draft status",
+          "when": "The user sends /finalize and selects No",
+          "then": "The presentation remains in draft status"
+        }
+      ],
+      "non_functional_requirements": [
+        { "nfr_id": "NFR011", "category": "Security", "description": "Only the presentation owner can finalize or unlock a presentation." }
+      ],
+      "test_cases": [
+        { "test_id": "T015", "title": "Finalize a presentation", "steps": ["Create a presentation", "Send /finalize", "Tap Yes"], "expected_result": "Presentation is marked as finalized." },
+        { "test_id": "T016", "title": "Cancel finalization", "steps": ["Create a presentation", "Send /finalize", "Tap No"], "expected_result": "Presentation remains in draft." },
+        { "test_id": "T017", "title": "Cannot edit finalized presentation", "steps": ["Finalize a presentation", "Attempt to edit a slide"], "expected_result": "Bot responds with error that the presentation is finalized." }
+      ]
+    },
+    {
+      "feature_id": "F007",
+      "general_info": {
+        "title": "Generate HTML Presentation",
+        "description": "Users can export their finalized presentation as a self-contained HTML file that can be viewed in any web browser as a slideshow.",
+        "priority": "high",
+        "status": "planned"
+      },
+      "goal_and_context": {
+        "goal": "Allow users to get a shareable, browser-viewable presentation file from their slide content.",
+        "context": "The HTML export uses a lightweight slideshow framework (e.g., Reveal.js) to render slides. The file is sent to the user as a document in Telegram."
+      },
+      "actors_and_roles": [
+        { "actor": "User", "role": "Requests HTML export of the presentation." },
+        { "actor": "Telegram Bot", "role": "Sends the generated HTML file as a document to the user." },
+        { "actor": "Backend Service", "role": "Generates the HTML file from the presentation data using a template engine." }
+      ],
+      "business_rules": [
+        { "rule_id": "BR022", "description": "Only finalized presentations can be exported to HTML." },
+        { "rule_id": "BR023", "description": "The HTML file must be self-contained with embedded CSS and JS." },
+        { "rule_id": "BR024", "description": "The generated HTML file size must not exceed 5 MB." }
+      ],
+      "acceptance_criteria": [
+        {
+          "scenario_id": "SC018",
+          "title": "Export finalized presentation to HTML",
+          "given": "The user has a finalized presentation",
+          "when": "The user sends /export_html",
+          "then": "The bot sends an HTML file as a document that can be opened in a browser as a slideshow"
+        },
+        {
+          "scenario_id": "SC019",
+          "title": "Reject export of draft presentation",
+          "given": "The user has a presentation in draft status",
+          "when": "The user sends /export_html",
+          "then": "The bot responds with an error asking the user to finalize the presentation first"
+        }
+      ],
+      "non_functional_requirements": [
+        { "nfr_id": "NFR012", "category": "Performance", "description": "HTML generation must complete within 10 seconds." },
+        { "nfr_id": "NFR013", "category": "Compatibility", "description": "The HTML file must render correctly in Chrome, Firefox, Safari, and Edge." }
+      ],
+      "test_cases": [
+        { "test_id": "T018", "title": "Export to HTML", "steps": ["Finalize a presentation", "Send /export_html", "Download the file"], "expected_result": "An HTML file is received that opens as a slideshow in the browser." },
+        { "test_id": "T019", "title": "Reject export of draft", "steps": ["Have a draft presentation", "Send /export_html"], "expected_result": "Bot responds with error to finalize first." },
+        { "test_id": "T020", "title": "HTML file is self-contained", "steps": ["Export a presentation to HTML", "Open the file offline"], "expected_result": "The slideshow renders correctly without internet access." }
+      ]
+    },
+    {
+      "feature_id": "F008",
+      "general_info": {
+        "title": "Export to PDF",
+        "description": "Users can export their finalized presentation as a PDF document with one slide per page.",
+        "priority": "medium",
+        "status": "planned"
+      },
+      "goal_and_context": {
+        "goal": "Provide a universally compatible export format for printing and sharing presentations.",
+        "context": "PDF export converts the HTML presentation into a multi-page PDF document. Each slide becomes one page in landscape orientation."
+      },
+      "actors_and_roles": [
+        { "actor": "User", "role": "Requests PDF export of the presentation." },
+        { "actor": "Telegram Bot", "role": "Sends the generated PDF file as a document to the user." },
+        { "actor": "Backend Service", "role": "Converts the presentation to PDF using a headless browser or PDF library." }
+      ],
+      "business_rules": [
+        { "rule_id": "BR025", "description": "Only finalized presentations can be exported to PDF." },
+        { "rule_id": "BR026", "description": "Each slide must occupy exactly one page in landscape orientation." },
+        { "rule_id": "BR027", "description": "The PDF file size must not exceed 10 MB." }
+      ],
+      "acceptance_criteria": [
+        {
+          "scenario_id": "SC020",
+          "title": "Export finalized presentation to PDF",
+          "given": "The user has a finalized presentation with 5 slides",
+          "when": "The user sends /export_pdf",
+          "then": "The bot sends a 5-page PDF document with one slide per page"
+        },
+        {
+          "scenario_id": "SC021",
+          "title": "Reject PDF export of draft presentation",
+          "given": "The user has a presentation in draft status",
+          "when": "The user sends /export_pdf",
+          "then": "The bot responds with an error asking the user to finalize the presentation first"
+        }
+      ],
+      "non_functional_requirements": [
+        { "nfr_id": "NFR014", "category": "Performance", "description": "PDF generation must complete within 20 seconds." },
+        { "nfr_id": "NFR015", "category": "Quality", "description": "PDF output must have a minimum resolution of 150 DPI." }
+      ],
+      "test_cases": [
+        { "test_id": "T021", "title": "Export to PDF", "steps": ["Finalize a presentation", "Send /export_pdf", "Download the file"], "expected_result": "A PDF file is received with one slide per page in landscape orientation." },
+        { "test_id": "T022", "title": "Reject PDF export of draft", "steps": ["Have a draft presentation", "Send /export_pdf"], "expected_result": "Bot responds with error to finalize first." },
+        { "test_id": "T023", "title": "PDF page count matches slide count", "steps": ["Finalize a 7-slide presentation", "Export to PDF", "Check page count"], "expected_result": "PDF has exactly 7 pages." }
+      ]
+    }
+  ]
+}
