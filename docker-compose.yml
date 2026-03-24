@@ -21,8 +21,7 @@ services:
 
   service:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ./service
     container_name: prezi_service
     restart: unless-stopped
     ports:
@@ -35,12 +34,10 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
 
   bot:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ./bot
     container_name: prezi_bot
     restart: unless-stopped
     env_file:
@@ -49,7 +46,6 @@ services:
       BACKEND_URL: http://service:8000
     depends_on:
       - service
-    command: python -m bot.main
 
 volumes:
   postgres_data:
