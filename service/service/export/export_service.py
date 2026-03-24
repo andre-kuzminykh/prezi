@@ -35,8 +35,38 @@ class ExportService:
         return await self.llm_service.generate_html(title, slides_data)
 
     def generate_pdf(self, html_content: str) -> bytes:
-        """Convert an HTML string to PDF bytes using WeasyPrint."""
+        """Convert LLM-generated HTML into a landscape PDF with one slide per page."""
         from weasyprint import HTML
+
+        # Inject print-specific CSS so each .slide becomes a separate
+        # landscape page and horizontal scroll layout is removed.
+        print_css = """
+<style>
+@page { size: landscape; margin: 0; }
+html, body {
+    display: block !important;
+    overflow: visible !important;
+    width: auto !important;
+    height: auto !important;
+    scroll-snap-type: none !important;
+}
+.slide {
+    width: 100vw !important;
+    height: 100vh !important;
+    page-break-after: always;
+    break-after: page;
+    flex: none !important;
+    scroll-snap-align: unset !important;
+}
+.slide:last-child { page-break-after: auto; break-after: auto; }
+.aurora-blob { animation: none !important; }
+</style>
+"""
+        # Insert before closing </head>
+        if "</head>" in html_content:
+            html_content = html_content.replace("</head>", print_css + "</head>")
+        else:
+            html_content = print_css + html_content
 
         pdf_bytes = HTML(string=html_content).write_pdf()
         return pdf_bytes

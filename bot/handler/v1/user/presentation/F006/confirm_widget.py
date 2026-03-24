@@ -1,4 +1,4 @@
-"""Widget: Generate and export presentation as HTML.
+"""Widget: Generate and export presentation as PDF.
 
 ## Traceability
 Feature: F006, F007, F008
@@ -30,18 +30,18 @@ async def on_done(
     callback_data: PresentationCallback,
     state: FSMContext,
 ) -> None:
-    """Generate HTML presentation via LLM and send as file."""
+    """Generate HTML via LLM, convert to landscape PDF, send to user."""
     presentation_id = callback_data.presentation_id
 
     await callback.answer()
-    await callback.message.edit_text(vocab.GENERATING_HTML)
+    await callback.message.edit_text(vocab.GENERATING_PDF)
 
     try:
-        html_content = await api.export_html(presentation_id)
+        pdf_bytes = await api.export_pdf(presentation_id)
 
         doc = BufferedInputFile(
-            file=html_content.encode("utf-8"),
-            filename=f"presentation_{presentation_id}.html",
+            file=pdf_bytes,
+            filename=f"presentation_{presentation_id}.pdf",
         )
         await callback.message.answer_document(
             document=doc,
